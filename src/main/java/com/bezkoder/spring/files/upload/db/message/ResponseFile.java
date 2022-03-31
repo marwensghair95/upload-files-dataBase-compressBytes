@@ -2,11 +2,11 @@ package com.bezkoder.spring.files.upload.db.message;
 
 public class ResponseFile {
   private String name;
-  private String url;
+  private byte[] url;
   private String type;
   private long size;
 
-  public ResponseFile(String name, String url, String type, long size) {
+  public ResponseFile(String name, byte[] url, String type, long size) {
     this.name = name;
     this.url = url;
     this.type = type;
@@ -21,11 +21,11 @@ public class ResponseFile {
     this.name = name;
   }
 
-  public String getUrl() {
+  public byte[] getUrl() {
     return url;
   }
 
-  public void setUrl(String url) {
+  public void setUrl(byte[] url) {
     this.url = url;
   }
 

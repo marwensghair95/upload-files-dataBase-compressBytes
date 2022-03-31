@@ -1,7 +1,11 @@
 package com.bezkoder.spring.files.upload.db.controller;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.zip.DataFormatException;
+import java.util.zip.Inflater;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -53,20 +57,43 @@ public class FileController {
 
       return new ResponseFile(
           dbFile.getName(),
-          fileDownloadUri,
+              decompressBytes(dbFile.getData()),
           dbFile.getType(),
-          dbFile.getData().length);
+              decompressBytes(dbFile.getData()).length);
     }).collect(Collectors.toList());
 
     return ResponseEntity.status(HttpStatus.OK).body(files);
   }
 
   @GetMapping("/files/{id}")
-  public ResponseEntity<byte[]> getFile(@PathVariable String id) {
-    FileDB fileDB = storageService.getFile(id);
+  public ResponseEntity<FileDB> getFile(@PathVariable String id) {
+    FileDB retrievedImage = storageService.getFile(id);
+
+
+    FileDB img = new FileDB(retrievedImage.getName(), retrievedImage.getType(),
+            decompressBytes( retrievedImage.getData()));
+
 
     return ResponseEntity.ok()
-        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileDB.getName() + "\"")
-        .body(fileDB.getData());
+
+        .body(img);
+  }
+
+  // uncompress the image bytes before returning it to the angular application
+  public static byte[] decompressBytes(byte[] data) {
+    Inflater inflater = new Inflater();
+    inflater.setInput(data);
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length);
+    byte[] buffer = new byte[1024];
+    try {
+      while (!inflater.finished()) {
+        int count = inflater.inflate(buffer);
+        outputStream.write(buffer, 0, count);
+      }
+      outputStream.close();
+    } catch (IOException ioe) {
+    } catch (DataFormatException e) {
+    }
+    return outputStream.toByteArray();
   }
 }
